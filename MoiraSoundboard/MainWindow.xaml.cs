@@ -1,24 +1,14 @@
 ﻿using HtmlAgilityPack;
 using NAudio.Wave;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace MoiraSoundboard {
     public partial class MainWindow : Window {
@@ -55,17 +45,12 @@ namespace MoiraSoundboard {
                 int indexOfSlash = url.LastIndexOf("/", url.Length - 1);
                 string fileName = url.Substring(indexOfSlash + 1, url.Length - indexOfSlash - 1);
 
-                if (!File.Exists(@"C:\temp\" + fileName)) {
-                    FileStream fileStream = File.Create(@"C:\temp\" + fileName);
-                    stream.CopyTo(fileStream);
-                }
-                /*if (!File.Exists($@"..\..\Sounds\\{fileName}")) {
+                if (!File.Exists($@"..\..\Sounds\\{fileName}")) {
                     FileStream fileStream = File.Create($@"..\..\Sounds\\{fileName}");
                     stream.CopyTo(fileStream);
-                }*/
+                }
 
                 return fileName;
-                return $@"../../Sounds/{fileName}";
             }
             catch (Exception e) {
                 Debug.WriteLine(e.Message);
@@ -85,17 +70,27 @@ namespace MoiraSoundboard {
         }
 
         public async Task PutSounds() {
+            BrushConverter brushConverter = new BrushConverter();
+
             foreach(var node in collection) {
-                string baseString = Regex.Match(node.OuterHtml, @"https(.*)(ogg)").Value;
-                int oggIndex = baseString.IndexOf("ogg");
-                string soundUrl = baseString.Substring(0, oggIndex) + "ogg";
+                try {
+                    string baseString = Regex.Match(node.OuterHtml, @"https(.*)(ogg)").Value;
+                    int oggIndex = baseString.IndexOf("ogg");
+                    string soundUrl = baseString.Substring(0, oggIndex) + "ogg";
 
-                string fileName = await DownloadSound(soundUrl);
-                string filePath = @"C:\temp\" + fileName;
+                    string fileName = await DownloadSound(soundUrl);
+                    string filePath = $@"../../Sounds/{fileName}";
 
-                SoundButton button = new SoundButton(FileNameToLabel(fileName), filePath);
-                button.Click += new RoutedEventHandler(ButtonClicked);
-                buttonsPanel.Children.Add(button);
+                    SoundButton button = new SoundButton(FileNameToLabel(fileName), filePath);
+                    button.Margin = new Thickness(5.0, 5.0, 10.0, 10.0);
+                    button.Background = (Brush)brushConverter.ConvertFrom("#FF4A2371");
+                    button.Foreground = Brushes.White;
+                    button.Click += new RoutedEventHandler(ButtonClicked);
+                    buttonsPanel.Children.Add(button);
+                }
+                catch(Exception ex) {
+                    Debug.WriteLine($"Failure at {node.InnerText}");
+                }
             }
         }
 
@@ -122,6 +117,19 @@ namespace MoiraSoundboard {
         private void AudioPlaybackStopped(object sender, EventArgs e) {
             WaveOutEvent player = sender as WaveOutEvent;
             player.Dispose();
+        }
+
+        private void HeaderDrag(object sender, MouseButtonEventArgs e) {
+            if (e.ChangedButton == MouseButton.Left)
+                this.DragMove();
+        }
+
+        private void CloseClicked(object sender, RoutedEventArgs e) {
+            Close();
+        }
+
+        private void MinimizeClicked(object sender, RoutedEventArgs e) {
+            this.WindowState = WindowState.Minimized;
         }
     }
 }

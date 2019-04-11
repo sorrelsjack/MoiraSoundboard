@@ -5,8 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MoiraSoundboard"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Moira Soundboard >:3" Height="450" Width="800" Background="Black" BorderBrush="Black" WindowStyle="None" ResizeMode="NoResize">
     <Grid>
-        <StackPanel x:Name="buttonsPanel"></StackPanel>
+        <StackPanel x:Name="headerBar" Orientation="Horizontal" HorizontalAlignment="Stretch" Background="#FF964FED" Margin="0,0,-0.4,398.2" MouseDown="HeaderDrag">
+            <Image Source="biotic_orb_mdz_icon.ico" Margin="5,0,0,0"></Image>
+            <DockPanel Margin="648,0,-0.4,0" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button x:Name="closeButton" Content="x" Foreground="White" HorizontalAlignment="Right" DockPanel.Dock="Right" Height="44.8" Width="44.8" Click="CloseClicked" FontSize="24" Background="#FF4A2371"/>
+                <Button x:Name="minimizeButton" Content="-" Foreground="White" HorizontalAlignment="Right" DockPanel.Dock="Right"  Height="44.8" Width="44.8" Click="MinimizeClicked" FontSize="24" Background="#FF4A2371"/>
+            </DockPanel>
+        </StackPanel>
+        <ScrollViewer Margin="20,53,0,2">
+            <WrapPanel x:Name="buttonsPanel" Margin="20,2,19.6,20.2"/>
+        </ScrollViewer>
     </Grid>
 </Window>
