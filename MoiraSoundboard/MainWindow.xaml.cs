@@ -60,23 +60,49 @@ namespace MoiraSoundboard {
         }
 
         private string FileNameToLabel(string fileName) {
-            int moiraIndex = fileName.IndexOf("Moira_");
-            string noMoira = fileName.Substring(moiraIndex + 6);
+            int moiraIndex = fileName.Contains("Moira_") ? fileName.IndexOf("Moira_") : 0;
+            string noMoira = fileName.Substring(moiraIndex + (fileName.Contains("Moira_") ? 6 : 0));
 
-            int oggIndex = noMoira.IndexOf(".ogg");
-            string noOgg = noMoira.Substring(0, oggIndex);
+            if (fileName.Contains(".ogg")) {
+                int oggIndex = noMoira.IndexOf(".ogg");
+                string noOgg = noMoira.Substring(0, oggIndex);
+                return Regex.Replace(noOgg, "_", " ");
+            }
+            else if (fileName.Contains(".flac")) {
+                int flacIndex = noMoira.IndexOf(".flac");
+                string noFlac = noMoira.Substring(0, flacIndex);
+                return Regex.Replace(noFlac, "_", "");
+            }
+            else if (fileName.Contains(".mp3")) {
+                int mp3Index = noMoira.IndexOf(".mp3");
+                string noMp3 = noMoira.Substring(0, mp3Index);
+                return Regex.Replace(noMp3, "_", "");
+            }
 
-            return Regex.Replace(noOgg, "_", " ");
+            return null;
         }
 
         public async Task PutSounds() {
             BrushConverter brushConverter = new BrushConverter();
+            string soundUrl = "";
 
             foreach(var node in collection) {
                 try {
-                    string baseString = Regex.Match(node.OuterHtml, @"https(.*)(ogg)").Value;
-                    int oggIndex = baseString.IndexOf("ogg");
-                    string soundUrl = baseString.Substring(0, oggIndex) + "ogg";
+                    if (node.OuterHtml.Contains(".ogg")) {
+                        string baseString = Regex.Match(node.OuterHtml, @"https(.*)(ogg)").Value;
+                        int oggIndex = baseString.IndexOf("ogg");
+                        soundUrl = baseString.Substring(0, oggIndex) + "ogg";
+                    }
+                    else if (node.OuterHtml.Contains(".mp3")) {
+                        string baseString = Regex.Match(node.OuterHtml, @"https(.*)(mp3)").Value;
+                        int oggIndex = baseString.IndexOf("mp3");
+                        soundUrl = baseString.Substring(0, oggIndex) + "mp3";
+                    }
+                    else if (node.OuterHtml.Contains(".flac")) {
+                        string baseString = Regex.Match(node.OuterHtml, @"https(.*)(flac)").Value;
+                        int oggIndex = baseString.IndexOf("flac");
+                        soundUrl = baseString.Substring(0, oggIndex) + "flac";
+                    }
 
                     string fileName = await DownloadSound(soundUrl);
                     string filePath = $@"../../Sounds/{fileName}";
@@ -111,6 +137,7 @@ namespace MoiraSoundboard {
             }
             catch (Exception ex) {
                 Debug.WriteLine(ex);
+                waveOut.Dispose();
             }
         }
 
