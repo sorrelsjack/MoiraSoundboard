@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using NAudio.Flac;
 using NAudio.Wave;
 using System;
 using System.Diagnostics;
@@ -37,6 +38,7 @@ namespace MoiraSoundboard {
         }
 
         public async Task<string> DownloadSound(string url) {
+            //TODO: Download all sounds at once and show a spinner while doing so
             HttpClient client = new HttpClient();
             try {
                 HttpResponseMessage response = await client.GetAsync(url);
@@ -124,15 +126,28 @@ namespace MoiraSoundboard {
             SoundButton button = sender as SoundButton;
             WaveOutEvent waveOut = new WaveOutEvent();
 
-            FileStream fileStream = new FileStream(button.SoundClip, FileMode.Open, FileAccess.Read);
-            MemoryStream memoryStream = new MemoryStream();
-            fileStream.CopyTo(memoryStream);
-
             try {
-                var vorbisStream = new NAudio.Vorbis.VorbisWaveReader(memoryStream);
-                vorbisStream.Position = 0;
-                waveOut.Init(vorbisStream);
-                waveOut.PlaybackStopped += new EventHandler(AudioPlaybackStopped);
+                if (button.SoundClip.Contains(".ogg")) {
+                    FileStream fileStream = new FileStream(button.SoundClip, FileMode.Open, FileAccess.Read);
+                    MemoryStream memoryStream = new MemoryStream();
+                    fileStream.CopyTo(memoryStream);
+
+                    var vorbisStream = new NAudio.Vorbis.VorbisWaveReader(memoryStream);
+                    vorbisStream.Position = 0;
+                    waveOut.Init(vorbisStream);
+                }
+                else if (button.SoundClip.Contains(".mp3")) {
+                    var reader = new Mp3FileReader(button.SoundClip);
+                    reader.Position = 0;
+                    waveOut.Init(reader);
+                }
+                else if (button.SoundClip.Contains(".flac")) {
+                    var reader = new FlacReader(button.SoundClip);
+                    reader.Position = 0;
+                    waveOut.Init(reader);
+                }
+
+                waveOut.PlaybackStopped += new EventHandler<StoppedEventArgs>(AudioPlaybackStopped);
                 waveOut.Play();
             }
             catch (Exception ex) {
@@ -141,7 +156,7 @@ namespace MoiraSoundboard {
             }
         }
 
-        private void AudioPlaybackStopped(object sender, EventArgs e) {
+        private void AudioPlaybackStopped(object sender, StoppedEventArgs e) {
             WaveOutEvent player = sender as WaveOutEvent;
             player.Dispose();
         }
